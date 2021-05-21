@@ -20,7 +20,7 @@ abstract contract Context {
 
 pragma solidity ^0.8.0;
 
-contract SeedFarm {
+contract SeedSwapFarm {
     using SafeERC20 for IERC20;
 
     //SeedSwap Token
