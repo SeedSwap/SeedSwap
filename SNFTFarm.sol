@@ -94,26 +94,44 @@ contract SNFTFarm {
     
     IERC20 public SNFTLP;
     IERC20 public SNFTToken;
-    
+    address public tresaddr;
+    uint256 public rewardPerBlock;
+    uint256 public startBlock;
+    uint256 public mulRewRedAfterBlock;
+    uint256[] public rewardMultipler =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
+
     event Stake(address indexed from, uint256 amount);
     event Unstake(address indexed from, uint256 amount);
     event YieldWithdraw(address indexed to, uint256 amount);
     
-    constructor(IERC20 _SNFTLP, IERC20 _snftToken) {
+    constructor(
+        IERC20 _SNFTLP,
+        IERC20 _snftToken,
+        address _tresaddr,
+        uint256 _rewardPerBlock,
+        uint256 _startBlock
+        ) 
+        
+        {
             SNFTLP = _SNFTLP;
             SNFTToken = _snftToken;
+            tresaddr = _tresaddr;
+            rewardPerBlock = _rewardPerBlock;
+            startBlock = _startBlock;
         }
         
     function stake(uint256 amount) public { 
-    require(amount > 0 && SNFTLP.balanceOf(msg.sender) >= amount, "You cannot stake zero tokens");
+    require(amount > 40 && SNFTLP.balanceOf(msg.sender) >= amount, "Under minimum staking requirements");
             
      if(isStaking[msg.sender] == true){
         uint256 toTransfer = calculateYieldTotal(msg.sender);
         snftBalance[msg.sender] += toTransfer;
         }
-        
-        SNFTLP.transferFrom(msg.sender, address(this), amount);
-        stakingBalance[msg.sender] += amount;
+        uint256 afterFees = ((amount * 975) / 1000);
+        uint256 tresFee = ((amount * 25) / 1000);
+        SNFTLP.transferFrom(msg.sender, address(this), afterFees);
+        SNFTLP.transferFrom(msg.sender, address(tresaddr), tresFee);
+        stakingBalance[msg.sender] += afterFees;
         startTime[msg.sender] = block.timestamp;
         isStaking[msg.sender] = true;
         emit Stake(msg.sender, amount);
