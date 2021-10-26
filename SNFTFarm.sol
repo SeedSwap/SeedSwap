@@ -97,8 +97,9 @@ contract SNFTFarm {
     address public tresaddr;
     uint256 public rewardPerBlock;
     uint256 public farmStartBlock;
-    uint256 public mulRewRedAfterBlock;
     uint256[] public rewardMultiplier =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
+    uint256[] public MUL_REDUCTION_AT_BLOCK; //reduce multiplier after 'x' blocks, init in constructor
+    uint256 public finishMulAtBlock;
 
     event Stake(address indexed from, uint256 amount);
     event Unstake(address indexed from, uint256 amount);
@@ -109,6 +110,7 @@ contract SNFTFarm {
         IERC20 _snftToken,
         address _tresaddr,
         uint256 _rewardPerBlock,
+        uint256 _mulReductionAfterBlock
         ) 
         
         {
@@ -117,7 +119,11 @@ contract SNFTFarm {
             tresaddr = _tresaddr;
             rewardPerBlock = _rewardPerBlock;
             farmStartBlock = block.number;
-            for
+            for (uint256 i = 0; i < rewardMultiplier.length - 1; i++){
+                uint256 mulReductionAtBlock = (_mulReductionAfterBlock * (i+1)) + farmStartBlock;
+                MUL_REDUCTION_AT_BLOCK.push(mulReductionAtBlock);
+            }
+            finishMulAtBlock = (_mulReductionAfterBlock * (rewardMultiplier.length - 1)) + farmStartBlock;
         }
         
     function stake(uint256 amount) public { 
@@ -144,8 +150,8 @@ contract SNFTFarm {
         amount = 0;
         stakingBalance[msg.sender] -= balTransfer;
         if(startTime[msg.sender] == block.number){
-        SNFTLP.transfer(msg.sender, ((balTransfer * 75) / 100);
-        SNFTLP.transfer(tresaddr, ((balTransfer * 25) / 100);
+        SNFTLP.transfer(msg.sender, ((balTransfer * 75) / 100));
+        SNFTLP.transfer(tresaddr, ((balTransfer * 25) / 100));
         } else {
             SNFTLP.transfer(msg.sender, balTransfer);
         }
@@ -165,7 +171,11 @@ contract SNFTFarm {
     }
 
     function calculateYieldTotal(address user) public view returns(uint256) {
-        if(isStaking[user]
+        uint256 time = calculateYieldTime(user) * 10**18;
+        uint256 rate = 86400;
+        uint256 timeRate = time / rate;
+        uint256 rawYield = (stakingBalance[user] * timeRate) / 10**18;
+        return rawYield;
     } 
 
     function withdrawYield() public {
