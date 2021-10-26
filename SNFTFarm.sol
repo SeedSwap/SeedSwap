@@ -96,7 +96,7 @@ contract SNFTFarm {
     IERC20 public SNFTToken;
     address public tresaddr;
     uint256 public rewardPerBlock;
-    uint256 public startBlock;
+    uint256 public farmStartBlock;
     uint256 public mulRewRedAfterBlock;
     uint256[] public rewardMultiplier =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
 
@@ -109,7 +109,6 @@ contract SNFTFarm {
         IERC20 _snftToken,
         address _tresaddr,
         uint256 _rewardPerBlock,
-        uint256 _startBlock
         ) 
         
         {
@@ -117,7 +116,8 @@ contract SNFTFarm {
             SNFTToken = _snftToken;
             tresaddr = _tresaddr;
             rewardPerBlock = _rewardPerBlock;
-            startBlock = _startBlock;
+            farmStartBlock = block.number;
+            for
         }
         
     function stake(uint256 amount) public { 
@@ -132,7 +132,7 @@ contract SNFTFarm {
         SNFTLP.transferFrom(msg.sender, address(this), afterFees);
         SNFTLP.transferFrom(msg.sender, address(tresaddr), tresFee);
         stakingBalance[msg.sender] += afterFees;
-        startTime[msg.sender] = block.timestamp;
+        startTime[msg.sender] = block.number;
         isStaking[msg.sender] = true;
         emit Stake(msg.sender, amount);
     }
@@ -140,11 +140,17 @@ contract SNFTFarm {
     function unstake(uint256 amount) public {
         require(isStaking[msg.sender] = true && stakingBalance[msg.sender] >= amount, "Insufficient Staked LP Tokens");
         uint256 yieldTransfer = calculateYieldTotal(msg.sender);
-        startTime[msg.sender] = block.timestamp;
         uint256 balTransfer = amount;
         amount = 0;
         stakingBalance[msg.sender] -= balTransfer;
-        SNFTLP.transfer(msg.sender, balTransfer);
+        if(startTime[msg.sender] == block.number){
+        SNFTLP.transfer(msg.sender, ((balTransfer * 75) / 100);
+        SNFTLP.transfer(tresaddr, ((balTransfer * 25) / 100);
+        } else {
+            SNFTLP.transfer(msg.sender, balTransfer);
+        }
+        //25% fee for withdrawals of LP tokens in the same block this is to prevent abuse from flashloans
+        startTime[msg.sender] = block.number;
         snftBalance[msg.sender] += yieldTransfer;
         if(stakingBalance[msg.sender] == 0){
             isStaking[msg.sender] = false;
@@ -153,17 +159,13 @@ contract SNFTFarm {
     }
 
     function calculateYieldTime(address user) public view returns(uint256){
-        uint256 end = block.timestamp;
+        uint256 end = block.number;
         uint256 totalTime = end - startTime[user];
         return totalTime;
     }
 
     function calculateYieldTotal(address user) public view returns(uint256) {
-        uint256 time = calculateYieldTime(user) * 10**18;
-        uint256 rate = 86400;
-        uint256 timeRate = time / rate;
-        uint256 rawYield = (stakingBalance[user] * timeRate) / 10**18;
-        return rawYield;
+        if(isStaking[user]
     } 
 
     function withdrawYield() public {
@@ -177,7 +179,7 @@ contract SNFTFarm {
             toTransfer += oldBalance;
         }
 
-        startTime[msg.sender] = block.timestamp;
+        startTime[msg.sender] = block.number;
         SNFTToken.transfer(msg.sender, toTransfer);
         emit YieldWithdraw(msg.sender, toTransfer);
     } 
