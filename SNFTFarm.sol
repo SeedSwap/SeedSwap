@@ -98,7 +98,7 @@ contract SNFTFarm {
     uint256 public rewardPerBlock;
     uint256 public startBlock;
     uint256 public mulRewRedAfterBlock;
-    uint256[] public rewardMultipler =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
+    uint256[] public rewardMultiplier =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
 
     event Stake(address indexed from, uint256 amount);
     event Unstake(address indexed from, uint256 amount);
