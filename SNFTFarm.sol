@@ -84,35 +84,35 @@ interface IERC20 {
 pragma solidity ^0.8.0;
 
 contract SNFTFarm {
-    
+
     mapping(address => uint256) public stakingBalance;
     mapping(address => bool) public isStaking;
     mapping(address => uint256) public startTime;
     mapping(address => uint256) public snftBalance;
-    
+
     string public name = "SNFTFarm";
-    
+
     IERC20 public SNFTLP;
     IERC20 public SNFTToken;
     address public tresaddr;
     uint256 public rewardPerBlock;
     uint256 public farmStartBlock;
-    uint256[] public rewardMultiplier =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925];
+    uint256[] public rewardMultiplier =[659563, 659563, 494672, 494672, 494672, 329781, 164890, 164890, 247336, 164890, 82445, 82445, 123668, 82445, 41222, 41222, 31925, 0];
     uint256[] public MUL_REDUCTION_AT_BLOCK; //reduce multiplier after 'x' blocks, init in constructor
     uint256 public finishMulAtBlock;
 
     event Stake(address indexed from, uint256 amount);
     event Unstake(address indexed from, uint256 amount);
     event YieldWithdraw(address indexed to, uint256 amount);
-    
+
     constructor(
         IERC20 _SNFTLP,
         IERC20 _snftToken,
         address _tresaddr,
         uint256 _rewardPerBlock,
         uint256 _mulReductionAfterBlock
-        ) 
-        
+        )
+
         {
             SNFTLP = _SNFTLP;
             SNFTToken = _snftToken;
@@ -124,11 +124,12 @@ contract SNFTFarm {
                 MUL_REDUCTION_AT_BLOCK.push(mulReductionAtBlock);
             }
             finishMulAtBlock = (_mulReductionAfterBlock * (rewardMultiplier.length - 1)) + farmStartBlock;
+            MUL_REDUCTION_AT_BLOCK.push(type(uint256).max);
         }
-        
-    function stake(uint256 amount) public { 
+
+    function stake(uint256 amount) public {
     require(amount > 40 && SNFTLP.balanceOf(msg.sender) >= amount, "Under minimum staking requirements");
-            
+
      if(isStaking[msg.sender] == true){
         uint256 toTransfer = calculateYieldTotal(msg.sender);
         snftBalance[msg.sender] += toTransfer;
@@ -142,7 +143,7 @@ contract SNFTFarm {
         isStaking[msg.sender] = true;
         emit Stake(msg.sender, amount);
     }
-    
+
     function unstake(uint256 amount) public {
         require(isStaking[msg.sender] = true && stakingBalance[msg.sender] >= amount, "Insufficient Staked LP Tokens");
         uint256 yieldTransfer = calculateYieldTotal(msg.sender);
@@ -176,13 +177,13 @@ contract SNFTFarm {
         uint256 timeRate = time / rate;
         uint256 rawYield = (stakingBalance[user] * timeRate) / 10**18;
         return rawYield;
-    } 
+    }
 
     function withdrawYield() public {
         uint256 toTransfer = calculateYieldTotal(msg.sender);
 
         require(toTransfer > 0 || snftBalance[msg.sender] > 0, "Insufficient amount" );
-            
+
         if(snftBalance[msg.sender] != 0){
             uint256 oldBalance = snftBalance[msg.sender];
             snftBalance[msg.sender] = 0;
@@ -192,6 +193,6 @@ contract SNFTFarm {
         startTime[msg.sender] = block.number;
         SNFTToken.transfer(msg.sender, toTransfer);
         emit YieldWithdraw(msg.sender, toTransfer);
-    } 
-    
+    }
+
 }
